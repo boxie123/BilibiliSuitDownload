@@ -1,10 +1,11 @@
 package main
 
 import (
-	"bilisuitdownload/utils"
 	"fmt"
 	"log"
 	"sync"
+
+	"github.com/boxie123/BilibiliSuitDownload/utils"
 )
 
 func main() {
