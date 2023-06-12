@@ -22,8 +22,8 @@ type Item struct {
 type EmojiInfoResponse struct {
 	Code int `json:"code"`
 	Data struct {
-		Item      Item `json:"item"`
-		SuitItems map[string][]Item
+		Item      Item              `json:"item"`
+		SuitItems map[string][]Item `json:"suit_items"`
 	} `json:"data"`
 }
 
@@ -90,17 +90,11 @@ func analyzeItem(item Item, parentItem string) []DownloadInfo {
 	properties := item.Properties
 	name := item.Name
 
-	urlCount := 0
-	for _, value := range properties {
-		if strings.HasPrefix(value, "https") {
-			urlCount++
-		}
-	}
-
 	invalidCharacterRegex := regexp.MustCompile(`[\/\:\*\?\"\<\>\|]`)
 	for key, value := range properties {
 		if strings.HasPrefix(value, "https") {
-			suffix := strings.Split(value, ".")[1]
+			suffix_slice := strings.Split(value, ".")
+			suffix := suffix_slice[len(suffix_slice)-1]
 
 			pkgName := invalidCharacterRegex.ReplaceAllString(parentItem, "_")
 			fileName := invalidCharacterRegex.ReplaceAllString(name, "_") + "." + key + "." + suffix
