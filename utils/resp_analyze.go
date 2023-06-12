@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -11,7 +12,8 @@ func AnalyzeResp(resp SuitInfoResponse) ([]DownloadInfo, error) {
 	suitName := resp.Data.Item.Name
 
 	for key, value := range suitItems {
-		parentDir := suitName + "\\" + key
+		// parentDir := suitName + "\\" + key
+		parentDir := filepath.Join(suitName, key)
 		allInfo = append(allInfo, analyzeItems(value, parentDir)...)
 	}
 	return allInfo, nil
@@ -26,7 +28,8 @@ func analyzeItems(items []Item, parentItem string) []DownloadInfo {
 		if subItems != nil {
 			name := item.Name
 			if parentItem != "" {
-				name = parentItem + "\\" + name
+				// name = parentItem + "\\" + name
+				name = filepath.Join(parentItem, name)
 			}
 			allInfo = append(allInfo, analyzeItems(subItems, name)...)
 		}
