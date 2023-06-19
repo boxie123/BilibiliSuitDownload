@@ -27,13 +27,13 @@ func GetSuitInfo(itemID int) (SuitInfoResponse, error) {
 		return SuitInfoResponse{}, fmt.Errorf("received non-200 status code: %d", resp.StatusCode)
 	}
 
-	emojiInfoResp := SuitInfoResponse{}
-	err = json.NewDecoder(resp.Body).Decode(&emojiInfoResp)
+	suitInfoResp := SuitInfoResponse{}
+	err = json.NewDecoder(resp.Body).Decode(&suitInfoResp)
 	if err != nil {
 		return SuitInfoResponse{}, err
 	}
 
-	return emojiInfoResp, nil
+	return suitInfoResp, nil
 }
 
 func DownloadFile(info DownloadInfo) error {
