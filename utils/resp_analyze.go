@@ -1,13 +1,18 @@
 package utils
 
 import (
+	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
 )
 
-func AnalyzeResp(resp SuitInfoResponse) ([]DownloadInfo, error) {
-	allInfo := []DownloadInfo{}
+func AnalyzeResp(info InfoResponse) []DownloadInfo {
+	return info.AnalyzeResp()
+}
+
+func (resp *SuitInfoResponse) AnalyzeResp() []DownloadInfo {
+	var allInfo []DownloadInfo
 	suitItems := resp.Data.SuitItems
 	suitName := resp.Data.Item.Name
 
@@ -16,11 +21,63 @@ func AnalyzeResp(resp SuitInfoResponse) ([]DownloadInfo, error) {
 		parentDir := filepath.Join(suitName, key)
 		allInfo = append(allInfo, analyzeItems(value, parentDir)...)
 	}
-	return allInfo, nil
+	return allInfo
+}
+
+func (info *DLCInfoSummary) AnalyzeResp() []DownloadInfo {
+	suitName := info.DLCBasicInfoResponse.Data.ActTitle
+	downloadInfoList := append(info.DLCInfoResponse.AnalyzeResp(), info.DLCBasicInfoResponse.AnalyzeResp()...)
+	//fmt.Println(downloadInfoList)
+	for i, _ := range downloadInfoList {
+		downloadInfoList[i].PkgName = suitName
+	}
+	return downloadInfoList
+}
+
+func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
+	var allInfo []DownloadInfo
+	allInfo = append(allInfo, DownloadInfo{
+		URL:      resp.Data.ActYImg,
+		FileName: "act_y_img.png",
+	})
+	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
+	for _, item := range resp.Data.ItemList {
+		suffixSlice := strings.Split(item.CardItem.CardImg, ".")
+		suffix := suffixSlice[len(suffixSlice)-1]
+		safeCardName := invalidCharacterRegex.ReplaceAllString(item.CardItem.CardName, "_")
+		ImgFileName := safeCardName + "." + suffix
+		allInfo = append(allInfo, DownloadInfo{URL: item.CardItem.CardImg, FileName: ImgFileName})
+
+		for i, video := range item.CardItem.VideoList {
+			allInfo = append(allInfo, DownloadInfo{
+				URL:      video,
+				FileName: fmt.Sprintf("%s_%d.mp4", safeCardName, i),
+			})
+		}
+	}
+	return allInfo
+}
+
+func (resp *DLCBasicInfoResponse) AnalyzeResp() []DownloadInfo {
+	var basicInfo []DownloadInfo
+	suitItems := resp.Data.CollectList
+	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
+
+	for _, collectItem := range suitItems {
+		suffixSlice := strings.Split(collectItem.RedeemItemImage, ".")
+		suffix := suffixSlice[len(suffixSlice)-1]
+
+		fileName := invalidCharacterRegex.ReplaceAllString(collectItem.RedeemItemName, "_") + "." + suffix
+		basicInfo = append(basicInfo, DownloadInfo{
+			URL:      collectItem.RedeemItemImage,
+			FileName: fileName,
+		})
+	}
+	return basicInfo
 }
 
 func analyzeItems(items []Item, parentItem string) []DownloadInfo {
-	allInfo := []DownloadInfo{}
+	var allInfo []DownloadInfo
 	for _, item := range items {
 		subItems := item.Items
 		allInfo = append(allInfo, analyzeItem(item, parentItem)...)
@@ -38,15 +95,15 @@ func analyzeItems(items []Item, parentItem string) []DownloadInfo {
 }
 
 func analyzeItem(item Item, parentItem string) []DownloadInfo {
-	itemInfo := []DownloadInfo{}
+	var itemInfo []DownloadInfo
 	properties := item.Properties
 	name := item.Name
 
-	invalidCharacterRegex := regexp.MustCompile(`[\/\:\*\?\"\<\>\|]`)
+	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
 	for key, value := range properties {
 		if strings.HasPrefix(value, "https") {
-			suffix_slice := strings.Split(value, ".")
-			suffix := suffix_slice[len(suffix_slice)-1]
+			suffixSlice := strings.Split(value, ".")
+			suffix := suffixSlice[len(suffixSlice)-1]
 
 			pkgName := invalidCharacterRegex.ReplaceAllString(parentItem, "_")
 			fileName := invalidCharacterRegex.ReplaceAllString(name, "_") + "." + key + "." + suffix
