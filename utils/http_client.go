@@ -2,7 +2,6 @@ package utils
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,8 +17,25 @@ func URLParse(urlStr string) (int, int) {
 	if err != nil {
 		panic(err)
 	}
+	if r.Hostname() == "b23.tv" {
+		// 禁止重定向
+		client := &http.Client{
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+		}
+		resp, err := client.Get(urlStr)
+		if err != nil {
+			panic(err)
+		}
+		urlStr = resp.Header.Get("Location")
+		r, err = url.Parse(urlStr)
+		if err != nil {
+			panic(err)
+		}
+	}
 	if r.Hostname() != "www.bilibili.com" {
-		panic(errors.New("hostname must be www.bilibili.com"))
+		panic(fmt.Errorf("hostname must be www.bilibili.com, it is %s now", r.Hostname()))
 	}
 	urlPath := r.Path
 	query := r.Query()
