@@ -12,7 +12,13 @@ import (
 	"strconv"
 )
 
-func URLParse(urlStr string) (int, int) {
+// URLParse
+//
+//	@Description: 通过分享链接提取装扮 id 和类型
+//	@param urlStr 分享链接
+//	@return int 装扮 id
+//	@return SuitType 类型，0为装扮，1为收藏集
+func URLParse(urlStr string) (int, SuitType) {
 	r, err := url.Parse(urlStr)
 	if err != nil {
 		panic(err)
@@ -47,7 +53,7 @@ func URLParse(urlStr string) (int, int) {
 				if err != nil {
 					panic(err)
 				}
-				return value, i
+				return value, SuitType(i)
 			}
 		}
 	}
@@ -58,9 +64,9 @@ func URLParse(urlStr string) (int, int) {
 		}
 		switch query.Get("type") {
 		case "dlc":
-			return value, 1
+			return value, DLCSuit
 		case "suit":
-			return value, 0
+			return value, NormalSuit
 		default:
 			return 0, 0
 		}
@@ -68,6 +74,12 @@ func URLParse(urlStr string) (int, int) {
 	return 0, 0
 }
 
+// GetSuitInfo
+//
+//	@Description: 获取装扮的信息
+//	@param itemID 装扮 id
+//	@return *SuitInfoResponse api返回值
+//	@return error 错误处理
 func GetSuitInfo(itemID int) (*SuitInfoResponse, error) {
 	baseUrl := "https://api.bilibili.com/x/garb/mall/item/suit/v2"
 	params := url.Values{}
@@ -93,6 +105,12 @@ func GetSuitInfo(itemID int) (*SuitInfoResponse, error) {
 	return &suitInfoResp, nil
 }
 
+// GetDLCInfo
+//
+//	@Description: 获取收藏集信息
+//	@param actID 收藏集id
+//	@return *DLCInfoSummary 两个api返回值的汇总
+//	@return error 错误处理
 func GetDLCInfo(actID int) (*DLCInfoSummary, error) {
 	itemListUrl := "https://api.bilibili.com/x/vas/dlc_act/act/item/list?act_id=%d"
 	baseUrl := "https://api.bilibili.com/x/vas/dlc_act/act/basic?act_id=%d"
@@ -132,6 +150,11 @@ func GetDLCInfo(actID int) (*DLCInfoSummary, error) {
 	return &DLCInfoSummary{DLCInfoResponse: dlcInfoResp, DLCBasicInfoResponse: dlcBaseInfoResp}, nil
 }
 
+// DownloadFile
+//
+//	@Description: 下载文件
+//	@param info 需下载文件的信息
+//	@return error 错误处理
 func DownloadFile(info DownloadInfo) error {
 	resp, err := http.Get(info.URL)
 	if err != nil {
@@ -163,4 +186,35 @@ func DownloadFile(info DownloadInfo) error {
 	}
 
 	return nil
+}
+
+// SearchSuit
+//
+//	@Description: 通过关键词搜索装扮
+//	@param kw 关键词
+//	@return SearchData 搜索结果
+//	@return error 错误处理
+func SearchSuit(kw string) (SearchData, error) {
+	searchApi := "https://api.bilibili.com/x/garb/v2/mall/home/search?key_word=%s"
+	searchResp, err := http.Get(fmt.Sprintf(searchApi, kw))
+
+	if err != nil {
+		return SearchData{}, err
+	}
+	defer searchResp.Body.Close()
+
+	if searchResp.StatusCode != http.StatusOK {
+		return SearchData{}, fmt.Errorf("received non-200 status code: %d", searchResp.StatusCode)
+	}
+
+	searchResponse := SearchResp{}
+	err = json.NewDecoder(searchResp.Body).Decode(&searchResponse)
+	if err != nil {
+		return SearchData{}, err
+	}
+
+	if searchResponse.Code != 0 {
+		return SearchData{}, fmt.Errorf("搜索失败：%s", searchResponse.Message)
+	}
+	return searchResponse.Data, nil
 }

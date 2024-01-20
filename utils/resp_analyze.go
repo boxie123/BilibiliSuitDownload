@@ -118,3 +118,21 @@ func analyzeItem(item Item, parentItem string) []DownloadInfo {
 	}
 	return itemInfo
 }
+
+func (searchData SearchData) AnalyzeResp() [][]string {
+	var result = [][]string{{"序号", "装扮名", "类型", "id"}}
+	for i, data := range searchData.List {
+		order := fmt.Sprintf("%d", i+1)
+		var suitType string
+		var suitID string
+		if data.ItemID == 0 {
+			suitType = "收藏集"
+			suitID = data.Properties.DlcActId
+		} else {
+			suitType = "装扮"
+			suitID = fmt.Sprintf("%d", data.ItemID)
+		}
+		result = append(result, []string{order, data.Name, suitType, suitID})
+	}
+	return result
+}
