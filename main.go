@@ -10,13 +10,13 @@ import (
 	"github.com/boxie123/BilibiliSuitDownload/utils"
 )
 
-func DownloadSuit(suitID int, suitType utils.SuitType) {
+func DownloadSuit(suitID int, suitType utils.SuitType, lotteryID int) {
 	var resp utils.InfoResponse
 	var err error
 	if suitType != utils.DLCSuit {
 		resp, err = utils.GetSuitInfo(suitID)
 	} else {
-		resp, err = utils.GetDLCInfo(suitID)
+		resp, err = utils.GetDLCInfo(suitID, lotteryID)
 	}
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +53,7 @@ func DownloadViaSharedLink() {
 	if suitID == 0 {
 		log.Fatal("给出的URL中不包含id信息")
 	}
-	DownloadSuit(suitID, suitType)
+	DownloadSuit(suitID, suitType, 0)
 }
 
 func DownloadViaSearch() {
@@ -89,13 +89,18 @@ func DownloadViaSearch() {
 		fmt.Println(err)
 		return
 	}
+	lotteryID, err := strconv.Atoi(searchResult[selectOrder][4])
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	var suitType utils.SuitType
 	if searchResult[selectOrder][2] == "收藏集" {
 		suitType = utils.DLCSuit
 	} else {
 		suitType = utils.NormalSuit
 	}
-	DownloadSuit(suitID, suitType)
+	DownloadSuit(suitID, suitType, lotteryID)
 }
 
 func main() {

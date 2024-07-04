@@ -23,36 +23,73 @@ type DLCInfoSummary struct {
 	DLCBasicInfoResponse
 }
 
+//type DLCInfoResponse struct {
+//	Code int `json:"code"`
+//	Data struct {
+//		ActYImg      string    `json:"act_y_img"`
+//		TotalItemCnt int       `json:"total_item_cnt"`
+//		ItemList     []DLCItem `json:"item_list"`
+//	} `json:"data"`
+//}
+
 type DLCInfoResponse struct {
 	Code int `json:"code"`
 	Data struct {
-		ActYImg      string    `json:"act_y_img"`
-		TotalItemCnt int       `json:"total_item_cnt"`
-		ItemList     []DLCItem `json:"item_list"`
+		ItemList    []DLCItem  `json:"item_list"`
+		CollectList DLCCollect `json:"collect_list"`
 	} `json:"data"`
+}
+
+type DLCItem struct {
+	ItemType int `json:"item_type"`
+	CardInfo struct {
+		CardName  string   `json:"card_name"`
+		CardImg   string   `json:"card_img"`
+		VideoList []string `json:"video_list"`
+	} `json:"card_info"`
+}
+
+type DLCCollect struct {
+	CollectInfos []CollectInfos `json:"collect_infos"`
+	CollectChain []CollectInfos `json:"collect_chain"`
+	//CollectID       int    `json:"collect_id"`
+	//RedeemItemName  string `json:"redeem_item_name"`
+	//RedeemItemImage string `json:"redeem_item_image"`
+}
+
+type CollectInfos struct {
+	RedeemItemName  string   `json:"redeem_item_name"`
+	RedeemItemImage string   `json:"redeem_item_image"`
+	CardItem        CardItem `json:"card_item"`
+}
+
+type CardItem struct {
+	CardTypeInfo struct {
+		Content CardItemContent `json:"content"`
+	} `json:"card_type_info"`
+}
+
+type CardItemContent struct {
+	Animation struct {
+		AnimationVideoUrls []string `json:"animation_video_urls"`
+	} `json:"animation"`
 }
 
 type DLCBasicInfoResponse struct {
 	Code int `json:"code"`
 	Data struct {
-		ActTitle    string        `json:"act_title"`
-		CollectList []CollectItem `json:"collect_list"`
+		ActTitle     string                `json:"act_title"`
+		LotteryList  []DLCBasicLotteryList `json:"lottery_list"`
+		ActYImg      string                `json:"act_y_img"`
+		AppHeadShow  string                `json:"app_head_show"`
+		ActSquareImg string                `json:"act_square_img"`
 	} `json:"data"`
 }
 
-type CollectItem struct {
-	CollectID       int    `json:"collect_id"`
-	RedeemItemName  string `json:"redeem_item_name"`
-	RedeemItemImage string `json:"redeem_item_image"`
-}
-
-type DLCItem struct {
-	ItemType int `json:"item_type"`
-	CardItem struct {
-		CardName  string   `json:"card_name"`
-		CardImg   string   `json:"card_img"`
-		VideoList []string `json:"video_list"`
-	} `json:"card_item"`
+type DLCBasicLotteryList struct {
+	LotteryID    int    `json:"lottery_id"`
+	LotteryName  string `json:"lottery_name"`
+	LotteryImage string `json:"lottery_image"`
 }
 
 type DownloadInfo struct {
@@ -76,8 +113,9 @@ type SearchResp struct {
 }
 
 type SearchProperties struct {
-	Type     string `json:"type"`
-	DlcActId string `json:"dlc_act_id"`
+	Type         string `json:"type"`
+	DlcActId     string `json:"dlc_act_id"`
+	DlcLotteryId string `json:"dlc_lottery_id"`
 }
 
 type SearchList struct {

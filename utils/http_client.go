@@ -111,25 +111,10 @@ func GetSuitInfo(itemID int) (*SuitInfoResponse, error) {
 //	@param actID 收藏集id
 //	@return *DLCInfoSummary 两个api返回值的汇总
 //	@return error 错误处理
-func GetDLCInfo(actID int) (*DLCInfoSummary, error) {
-	itemListUrl := "https://api.bilibili.com/x/vas/dlc_act/act/item/list?act_id=%d"
-	baseUrl := "https://api.bilibili.com/x/vas/dlc_act/act/basic?act_id=%d"
-
-	itemListResp, err := http.Get(fmt.Sprintf(itemListUrl, actID))
-	if err != nil {
-		return &DLCInfoSummary{}, err
-	}
-	defer itemListResp.Body.Close()
-
-	if itemListResp.StatusCode != http.StatusOK {
-		return &DLCInfoSummary{}, fmt.Errorf("received non-200 status code: %d", itemListResp.StatusCode)
-	}
-
-	dlcInfoResp := DLCInfoResponse{}
-	err = json.NewDecoder(itemListResp.Body).Decode(&dlcInfoResp)
-	if err != nil {
-		return &DLCInfoSummary{}, err
-	}
+func GetDLCInfo(actID int, lotteryID int) (*DLCInfoSummary, error) {
+	//itemListUrl := "https://api.bilibili.com/x/vas/dlc_act/act/item/list?act_id=%d"
+	const itemListUrl = "https://api.bilibili.com/x/vas/dlc_act/lottery_home_detail?act_id=%d&lottery_id=%d"
+	const baseUrl = "https://api.bilibili.com/x/vas/dlc_act/act/basic?act_id=%d"
 
 	baseResp, err := http.Get(fmt.Sprintf(baseUrl, actID))
 	if err != nil {
@@ -147,7 +132,28 @@ func GetDLCInfo(actID int) (*DLCInfoSummary, error) {
 		return &DLCInfoSummary{}, err
 	}
 
-	return &DLCInfoSummary{DLCInfoResponse: dlcInfoResp, DLCBasicInfoResponse: dlcBaseInfoResp}, nil
+	if lotteryID == 0 {
+		fmt.Println("未指定具体卡池，将下载最新一期卡池中资源")
+		lotteryID = dlcBaseInfoResp.Data.LotteryList[len(dlcBaseInfoResp.Data.LotteryList)-1].LotteryID
+	}
+
+	itemListResp, err := http.Get(fmt.Sprintf(itemListUrl, actID, lotteryID))
+	if err != nil {
+		return &DLCInfoSummary{}, err
+	}
+	defer itemListResp.Body.Close()
+
+	if itemListResp.StatusCode != http.StatusOK {
+		return &DLCInfoSummary{}, fmt.Errorf("received non-200 status code: %d", itemListResp.StatusCode)
+	}
+
+	dlcDetailResponse := DLCInfoResponse{}
+	err = json.NewDecoder(itemListResp.Body).Decode(&dlcDetailResponse)
+	if err != nil {
+		return &DLCInfoSummary{}, err
+	}
+
+	return &DLCInfoSummary{DLCInfoResponse: dlcDetailResponse, DLCBasicInfoResponse: dlcBaseInfoResp}, nil
 }
 
 // DownloadFile

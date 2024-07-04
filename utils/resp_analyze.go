@@ -36,19 +36,39 @@ func (info *DLCInfoSummary) AnalyzeResp() []DownloadInfo {
 
 func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
 	var allInfo []DownloadInfo
-	allInfo = append(allInfo, DownloadInfo{
-		URL:      resp.Data.ActYImg,
-		FileName: "act_y_img.png",
-	})
+	//allInfo = append(allInfo, DownloadInfo{
+	//	URL:      resp.Data.ActYImg,
+	//	FileName: "act_y_img.png",
+	//})
 	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
 	for _, item := range resp.Data.ItemList {
-		suffixSlice := strings.Split(item.CardItem.CardImg, ".")
+		suffixSlice := strings.Split(item.CardInfo.CardImg, ".")
 		suffix := suffixSlice[len(suffixSlice)-1]
-		safeCardName := invalidCharacterRegex.ReplaceAllString(item.CardItem.CardName, "_")
+		safeCardName := invalidCharacterRegex.ReplaceAllString(item.CardInfo.CardName, "_")
 		ImgFileName := safeCardName + "." + suffix
-		allInfo = append(allInfo, DownloadInfo{URL: item.CardItem.CardImg, FileName: ImgFileName})
+		allInfo = append(allInfo, DownloadInfo{URL: item.CardInfo.CardImg, FileName: ImgFileName})
 
-		for i, video := range item.CardItem.VideoList {
+		for i, video := range item.CardInfo.VideoList {
+			allInfo = append(allInfo, DownloadInfo{
+				URL:      video,
+				FileName: fmt.Sprintf("%s_%d.mp4", safeCardName, i),
+			})
+		}
+	}
+	var collectList []CollectInfos
+	collectList = append(collectList, resp.Data.CollectList.CollectInfos...)
+	collectList = append(collectList, resp.Data.CollectList.CollectChain...)
+	for _, collect := range collectList {
+		suffixSlice := strings.Split(collect.RedeemItemImage, ".")
+		suffix := suffixSlice[len(suffixSlice)-1]
+		safeCardName := invalidCharacterRegex.ReplaceAllString(collect.RedeemItemName, "_")
+		ImgFileName := safeCardName + "." + suffix
+		allInfo = append(allInfo, DownloadInfo{URL: collect.RedeemItemImage, FileName: ImgFileName})
+
+		if len(collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls) > 0 {
+			continue
+		}
+		for i, video := range collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls {
 			allInfo = append(allInfo, DownloadInfo{
 				URL:      video,
 				FileName: fmt.Sprintf("%s_%d.mp4", safeCardName, i),
@@ -60,16 +80,28 @@ func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
 
 func (resp *DLCBasicInfoResponse) AnalyzeResp() []DownloadInfo {
 	var basicInfo []DownloadInfo
-	suitItems := resp.Data.CollectList
+	basicInfo = append(basicInfo, DownloadInfo{
+		URL:      resp.Data.ActYImg,
+		FileName: "act_y_img.png",
+	})
+	basicInfo = append(basicInfo, DownloadInfo{
+		URL:      strings.Split(resp.Data.AppHeadShow, "@")[0],
+		FileName: "app_head_show.png",
+	})
+	basicInfo = append(basicInfo, DownloadInfo{
+		URL:      strings.Split(resp.Data.ActSquareImg, "@")[0],
+		FileName: "act_square_img.png",
+	})
+	suitItems := resp.Data.LotteryList
 	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
 
 	for _, collectItem := range suitItems {
-		suffixSlice := strings.Split(collectItem.RedeemItemImage, ".")
+		suffixSlice := strings.Split(collectItem.LotteryImage, ".")
 		suffix := suffixSlice[len(suffixSlice)-1]
 
-		fileName := invalidCharacterRegex.ReplaceAllString(collectItem.RedeemItemName, "_") + "." + suffix
+		fileName := invalidCharacterRegex.ReplaceAllString(collectItem.LotteryName, "_") + "." + suffix
 		basicInfo = append(basicInfo, DownloadInfo{
-			URL:      collectItem.RedeemItemImage,
+			URL:      collectItem.LotteryImage,
 			FileName: fileName,
 		})
 	}
@@ -120,19 +152,22 @@ func analyzeItem(item Item, parentItem string) []DownloadInfo {
 }
 
 func (searchData SearchData) AnalyzeResp() [][]string {
-	var result = [][]string{{"序号", "装扮名", "类型", "id"}}
+	var result = [][]string{{"序号", "装扮名", "类型", "id", "卡池id"}}
 	for i, data := range searchData.List {
 		order := fmt.Sprintf("%d", i+1)
 		var suitType string
 		var suitID string
+		var lotteryID string
 		if data.ItemID == 0 {
 			suitType = "收藏集"
 			suitID = data.Properties.DlcActId
+			lotteryID = data.Properties.DlcLotteryId
 		} else {
 			suitType = "装扮"
 			suitID = fmt.Sprintf("%d", data.ItemID)
+			lotteryID = "0"
 		}
-		result = append(result, []string{order, data.Name, suitType, suitID})
+		result = append(result, []string{order, data.Name, suitType, suitID, lotteryID})
 	}
 	return result
 }
