@@ -4,7 +4,7 @@
 
 ### 使用方法
 
-运行 `release` 中的 `.exe` 文件
+下载并运行 [`release`](https://github.com/boxie123/BilibiliSuitDownload/releases/latest) 中的 `.exe` 文件，根据文字提示操作
 
 > [!CAUTION]
 > 请勿滥用，本项目仅用于学习和测试！请勿滥用，本项目仅用于学习和测试！请勿滥用，本项目仅用于学习和测试！
