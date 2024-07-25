@@ -132,6 +132,13 @@ func GetDLCInfo(actID int, lotteryID int) (*DLCInfoSummary, error) {
 		return &DLCInfoSummary{}, err
 	}
 
+	dLCBasicLotteryList := dlcBaseInfoResp.Data.LotteryList
+	if len(dLCBasicLotteryList) > 1 {
+		fmt.Println("收藏集中存在多个卡池，如下表")
+		selectOrder := SelectLottery(dLCBasicLotteryList)
+		lotteryID = dLCBasicLotteryList[selectOrder-1].LotteryID
+	}
+
 	if lotteryID == 0 {
 		fmt.Println("未指定具体卡池，将下载最新一期卡池中资源")
 		lotteryID = dlcBaseInfoResp.Data.LotteryList[len(dlcBaseInfoResp.Data.LotteryList)-1].LotteryID

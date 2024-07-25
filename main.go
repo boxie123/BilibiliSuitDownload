@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/mattn/go-runewidth"
 	"log"
 	"strconv"
 	"sync"
@@ -65,24 +64,15 @@ func DownloadViaSearch() {
 		panic(err)
 	}
 	searchResult := searchData.AnalyzeResp()
-	for _, row := range searchResult {
-		for i, cell := range row {
-			if i == 1 {
-				fmtStr := fmt.Sprintf("%%-%ds", 40-(len(cell)-runewidth.StringWidth(cell)))
-				fmt.Printf(fmtStr, cell)
-			} else {
-				fmtStr := fmt.Sprintf("%%-%ds", 10-(len(cell)-runewidth.StringWidth(cell)))
-				fmt.Printf(fmtStr, cell)
-			}
-		}
-		fmt.Println()
-	}
+
 	var selectOrder int
-	fmt.Printf("\n请输入选择的序号：")
-	fmt.Scanln(&selectOrder)
-	if selectOrder > len(searchResult) || selectOrder < 1 {
-		fmt.Println("序号不存在")
-		return
+	for {
+		selectOrder, err = utils.PrintAndSelectList(searchResult)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		break
 	}
 	suitID, err := strconv.Atoi(searchResult[selectOrder][3])
 	if err != nil {

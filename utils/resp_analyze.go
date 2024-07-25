@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"github.com/mattn/go-runewidth"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -25,7 +26,8 @@ func (resp *SuitInfoResponse) AnalyzeResp() []DownloadInfo {
 }
 
 func (info *DLCInfoSummary) AnalyzeResp() []DownloadInfo {
-	suitName := info.DLCBasicInfoResponse.Data.ActTitle
+	//suitName := info.DLCBasicInfoResponse.Data.ActTitle
+	suitName := fmt.Sprintf("%s_%s", info.DLCBasicInfoResponse.Data.ActTitle, info.DLCInfoResponse.Data.Name)
 	downloadInfoList := append(info.DLCInfoResponse.AnalyzeResp(), info.DLCBasicInfoResponse.AnalyzeResp()...)
 	//fmt.Println(downloadInfoList)
 	for i, _ := range downloadInfoList {
@@ -170,4 +172,50 @@ func (searchData SearchData) AnalyzeResp() [][]string {
 		result = append(result, []string{order, data.Name, suitType, suitID, lotteryID})
 	}
 	return result
+}
+
+// PrintAndSelectList
+//
+//	@Description: 以表格形式打印嵌套列表，并等待用户选择其中一项
+func PrintAndSelectList(selectList [][]string) (int, error) {
+	for _, row := range selectList {
+		for i, cell := range row {
+			if i == 1 {
+				fmtStr := fmt.Sprintf("%%-%ds", 40-(len(cell)-runewidth.StringWidth(cell)))
+				fmt.Printf(fmtStr, cell)
+			} else {
+				fmtStr := fmt.Sprintf("%%-%ds", 10-(len(cell)-runewidth.StringWidth(cell)))
+				fmt.Printf(fmtStr, cell)
+			}
+		}
+		fmt.Println()
+	}
+	var selectOrder int
+	fmt.Printf("\n请输入选择的序号：")
+	fmt.Scanln(&selectOrder)
+	if selectOrder > len(selectList) || selectOrder < 1 {
+		return 0, fmt.Errorf("序号不存在")
+	}
+	return selectOrder, nil
+}
+
+func SelectLottery(dlcBasicLotteryList []DLCBasicLotteryList) int {
+	var lotteryList = [][]string{{"序号", "卡池名", "卡池id"}}
+	for i, data := range dlcBasicLotteryList {
+		order := fmt.Sprintf("%d", i+1)
+		var lotteryID string
+		lotteryID = fmt.Sprintf("%d", data.LotteryID)
+		lotteryList = append(lotteryList, []string{order, data.LotteryName, lotteryID})
+	}
+	var selectOrder int
+	var err error
+	for {
+		selectOrder, err = PrintAndSelectList(lotteryList)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		break
+	}
+	return selectOrder
 }

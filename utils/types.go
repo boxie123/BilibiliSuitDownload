@@ -35,6 +35,7 @@ type DLCInfoSummary struct {
 type DLCInfoResponse struct {
 	Code int `json:"code"`
 	Data struct {
+		Name        string     `json:"name"`
 		ItemList    []DLCItem  `json:"item_list"`
 		CollectList DLCCollect `json:"collect_list"`
 	} `json:"data"`
