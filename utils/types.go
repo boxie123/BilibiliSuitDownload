@@ -59,6 +59,8 @@ type DLCCollect struct {
 }
 
 type CollectInfos struct {
+	RedeemItemType  int      `json:"redeem_item_type"`
+	RedeemItemId    string   `json:"redeem_item_id"`
 	RedeemItemName  string   `json:"redeem_item_name"`
 	RedeemItemImage string   `json:"redeem_item_image"`
 	CardItem        CardItem `json:"card_item"`

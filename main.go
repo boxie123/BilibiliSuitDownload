@@ -10,11 +10,13 @@ import (
 )
 
 func DownloadSuit(suitID int, suitType utils.SuitType, lotteryID int) {
+	fmt.Printf("当前装扮id为：%d，卡池id为：%d", suitID, lotteryID)
 	var resp utils.InfoResponse
 	var err error
 	if suitType != utils.DLCSuit {
 		resp, err = utils.GetSuitInfo(suitID)
 	} else {
+		fmt.Println("当前不支持下载收藏集中的表情包，请根据下面提供的item_id，在我的另一个项目（https://github.com/boxie123/BilibiliEmojiDownload）中搜索并下载")
 		resp, err = utils.GetDLCInfo(suitID, lotteryID)
 	}
 	if err != nil {
@@ -96,13 +98,18 @@ func DownloadViaSearch() {
 func main() {
 	fmt.Printf("目前有两种模式\n1. 输入分享链接\n2. 通过关键词搜索\n请输入序号选择模式：\n")
 	var selectOrder int
-	fmt.Scanln(&selectOrder)
-	if selectOrder == 1 {
-		DownloadViaSharedLink()
-	} else if selectOrder == 2 {
-		DownloadViaSearch()
-	} else {
-		fmt.Printf("\n输入错误，序号%d不存在\n", selectOrder)
-		fmt.Scanln()
+	breakTag := false
+	for !breakTag {
+		fmt.Scanln(&selectOrder)
+		switch selectOrder {
+		case 1:
+			DownloadViaSharedLink()
+			breakTag = true
+		case 2:
+			DownloadViaSearch()
+			breakTag = true
+		default:
+			fmt.Printf("\n输入错误，序号%d不存在\n请重新输入：", selectOrder)
+		}
 	}
 }

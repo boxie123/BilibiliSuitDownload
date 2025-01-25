@@ -86,6 +86,7 @@ func GetSuitInfo(itemID int) (*SuitInfoResponse, error) {
 	params.Set("part", "suit")
 	params.Set("item_id", strconv.Itoa(itemID))
 
+	// fmt.Printf("查询具体信息：%s\n", baseUrl+"?"+params.Encode())
 	resp, err := http.Get(baseUrl + "?" + params.Encode())
 	if err != nil {
 		return &SuitInfoResponse{}, err
@@ -143,7 +144,7 @@ func GetDLCInfo(actID int, lotteryID int) (*DLCInfoSummary, error) {
 		fmt.Println("未指定具体卡池，将下载最新一期卡池中资源")
 		lotteryID = dlcBaseInfoResp.Data.LotteryList[len(dlcBaseInfoResp.Data.LotteryList)-1].LotteryID
 	}
-
+	// fmt.Printf("查询具体信息：%s\n", fmt.Sprintf(itemListUrl, actID, lotteryID))
 	itemListResp, err := http.Get(fmt.Sprintf(itemListUrl, actID, lotteryID))
 	if err != nil {
 		return &DLCInfoSummary{}, err

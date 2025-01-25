@@ -66,7 +66,9 @@ func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
 		safeCardName := invalidCharacterRegex.ReplaceAllString(collect.RedeemItemName, "_")
 		ImgFileName := safeCardName + "." + suffix
 		allInfo = append(allInfo, DownloadInfo{URL: collect.RedeemItemImage, FileName: ImgFileName})
-
+		if collect.RedeemItemType == 2 {
+			fmt.Printf("当前收藏集中存在表情包，item_id为: %s\n", collect.RedeemItemId)
+		}
 		if len(collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls) > 0 {
 			continue
 		}
