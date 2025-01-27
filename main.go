@@ -10,13 +10,17 @@ import (
 )
 
 func DownloadSuit(suitID int, suitType utils.SuitType, lotteryID int) {
-	fmt.Printf("当前装扮id为：%d，卡池id为：%d", suitID, lotteryID)
 	var resp utils.InfoResponse
 	var err error
 	if suitType != utils.DLCSuit {
 		resp, err = utils.GetSuitInfo(suitID)
 	} else {
-		fmt.Println("当前不支持下载收藏集中的表情包，请根据下面提供的item_id，在我的另一个项目（https://github.com/boxie123/BilibiliEmojiDownload）中搜索并下载")
+		fmt.Println("是否下载收藏集中表情包？（可能失败，请确保当前运行窗口可以连接到raw.githubusercontent.com）(y/N)")
+		var ifDownloadEmoji string
+		fmt.Scanln(&ifDownloadEmoji)
+		if ifDownloadEmoji == "y" {
+			utils.IfGetEmoji = true
+		}
 		resp, err = utils.GetDLCInfo(suitID, lotteryID)
 	}
 	if err != nil {
@@ -54,6 +58,7 @@ func DownloadViaSharedLink() {
 	if suitID == 0 {
 		log.Fatal("给出的URL中不包含id信息")
 	}
+	fmt.Printf("当前装扮id为：%d\n", suitID)
 	DownloadSuit(suitID, suitType, 0)
 }
 
