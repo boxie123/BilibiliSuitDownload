@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+var invalidCharacterRegex = regexp.MustCompile(`[/:*?"<>|]`)
+
 func AnalyzeResp(info InfoResponse) []DownloadInfo {
 	return info.AnalyzeResp()
 }
@@ -28,10 +30,11 @@ func (resp *SuitInfoResponse) AnalyzeResp() []DownloadInfo {
 func (info *DLCInfoSummary) AnalyzeResp() []DownloadInfo {
 	//suitName := info.DLCBasicInfoResponse.Data.ActTitle
 	suitName := fmt.Sprintf("%s_%s", info.DLCBasicInfoResponse.Data.ActTitle, info.DLCInfoResponse.Data.Name)
+	suitName = invalidCharacterRegex.ReplaceAllString(suitName, "_")
 	downloadInfoList := append(info.DLCInfoResponse.AnalyzeResp(), info.DLCBasicInfoResponse.AnalyzeResp()...)
 	//fmt.Println(downloadInfoList)
 	for i, _ := range downloadInfoList {
-		downloadInfoList[i].PkgName = suitName
+		downloadInfoList[i].PkgName = fmt.Sprintf("%s%s", suitName, downloadInfoList[i].PkgName)
 	}
 	return downloadInfoList
 }
@@ -42,7 +45,6 @@ func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
 	//	URL:      resp.Data.ActYImg,
 	//	FileName: "act_y_img.png",
 	//})
-	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
 	for _, item := range resp.Data.ItemList {
 		suffixSlice := strings.Split(item.CardInfo.CardImg, ".")
 		suffix := suffixSlice[len(suffixSlice)-1]
@@ -66,8 +68,14 @@ func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
 		safeCardName := invalidCharacterRegex.ReplaceAllString(collect.RedeemItemName, "_")
 		ImgFileName := safeCardName + "." + suffix
 		allInfo = append(allInfo, DownloadInfo{URL: collect.RedeemItemImage, FileName: ImgFileName})
-		if collect.RedeemItemType == 2 {
-			fmt.Printf("当前收藏集中存在表情包，item_id为: %s\n", collect.RedeemItemId)
+		if collect.RedeemItemType == 2 || collect.RedeemItemType == 15 && IfGetEmoji {
+			//fmt.Printf("当前收藏集中存在表情包，item_id为: %s\n", collect.RedeemItemId)
+			emojiDownloadInfos, err := getEmojiDownloadInfo(collect.RedeemItemId)
+			if err != nil {
+				fmt.Printf("获取表情信息失败：%v\n", err)
+			}
+			//fmt.Printf("表情包下载信息为：%v\n", emojiDownloadInfos)
+			allInfo = append(allInfo, emojiDownloadInfos...)
 		}
 		if len(collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls) > 0 {
 			continue
@@ -97,7 +105,6 @@ func (resp *DLCBasicInfoResponse) AnalyzeResp() []DownloadInfo {
 		FileName: "act_square_img.png",
 	})
 	suitItems := resp.Data.LotteryList
-	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
 
 	for _, collectItem := range suitItems {
 		suffixSlice := strings.Split(collectItem.LotteryImage, ".")
@@ -135,7 +142,6 @@ func analyzeItem(item Item, parentItem string) []DownloadInfo {
 	properties := item.Properties
 	name := item.Name
 
-	invalidCharacterRegex := regexp.MustCompile(`[/:*?"<>|]`)
 	for key, value := range properties {
 		if strings.HasPrefix(value, "https") {
 			suffixSlice := strings.Split(value, ".")
