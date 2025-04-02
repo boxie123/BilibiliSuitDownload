@@ -77,7 +77,7 @@ func (resp *DLCInfoResponse) AnalyzeResp() []DownloadInfo {
 			//fmt.Printf("表情包下载信息为：%v\n", emojiDownloadInfos)
 			allInfo = append(allInfo, emojiDownloadInfos...)
 		}
-		if len(collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls) > 0 {
+		if len(collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls) == 0 {
 			continue
 		}
 		for i, video := range collect.CardItem.CardTypeInfo.Content.Animation.AnimationVideoUrls {
